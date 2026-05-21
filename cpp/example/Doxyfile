@@ -1,0 +1,20 @@
+# Doxyfile for example C++ project
+# Generates XML output only (no HTML) for use with cpp-api-explorer.py
+
+PROJECT_NAME           = "Example"
+PROJECT_BRIEF          = "Example C++ project for API Doc Explorer"
+OUTPUT_DIRECTORY       = ./docs
+INPUT                  = ./include
+FILE_PATTERNS          = *.h *.hpp
+RECURSIVE              = YES
+GENERATE_XML           = YES
+XML_OUTPUT             = .
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_NO_PARAMDOC       = NO
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = NO
+SORT_MEMBER_DOCS       = YES

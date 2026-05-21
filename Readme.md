@@ -8,6 +8,13 @@ When an LLM-based agent works with a private SDK or large-scale codebase it was 
 
 ---
 
+## Install This Skill
+
+```bash
+# cd to your  agent's skills folder
+git clone https://github.com/qingfengxia/api-doc-explorer.git
+```
+
 ## Why You Need This
 
 | Pain Point | Without API Doc Explorer | With API Doc Explorer |
@@ -146,6 +153,8 @@ The entire project was built by vibe-coding — adding another language is strai
 - [ ] Unified `api-explorer` CLI wrapper for all languages
 - [ ] GitHub CI pipeline for per-language build & test
 - [ ] English-first example code across all languages
+- [ ] performance:  split api-docs.json into multiple files (partially supported)
+- [ ] robustness: not all language feature is suported
 
 ---
 

@@ -7,7 +7,7 @@ cd "$SCRIPT_DIR"
 echo "=== C++: test ==="
 
 EXPLORER="cpp-api-explorer.py"
-DOCS="docs"
+DOCS="example/docs"
 PASS=0
 FAIL=0
 
@@ -31,19 +31,27 @@ if [ ! -f "$DOCS/index.xml" ]; then
   exit 0
 fi
 
-echo "  Test 1: namespace ROS2"
-OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" ROS2 2>&1 || true)
-check "ROS2 namespace" "$OUTPUT" "Classes / Structs"
+echo "  Test 1: namespace example"
+OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" example 2>&1 || true)
+check "example namespace" "$OUTPUT" "example"
 
-echo "  Test 2: struct query TopicConfiguration"
-OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" TopicConfiguration 2>&1 || true)
-check "TopicConfiguration" "$OUTPUT" "m_type"
+echo "  Test 2: class query UserService"
+OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" UserService 2>&1 || true)
+check "UserService" "$OUTPUT" "findUser"
 
-echo "  Test 3: method query QoS::GetQoS"
-OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" ROS2::QoS::GetQoS 2>&1 || true)
-check "GetQoS method" "$OUTPUT" "GetQoS"
+echo "  Test 3: method query UserService::findUser"
+OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" example::UserService::findUser 2>&1 || true)
+check "findUser method" "$OUTPUT" "findUser"
 
-echo "  Test 4: non-existent symbol"
+echo "  Test 4: struct query User"
+OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" User 2>&1 || true)
+check "User struct" "$OUTPUT" "User"
+
+echo "  Test 5: enum query LogLevel"
+OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" LogLevel 2>&1 || true)
+check "LogLevel enum" "$OUTPUT" "LogLevel"
+
+echo "  Test 6: non-existent symbol"
 OUTPUT=$(python3 "$EXPLORER" --doc-path "$DOCS" NonExistentSymbol 2>&1 || true)
 check "not-found" "$OUTPUT" "No API found"
 

@@ -12,20 +12,11 @@ echo "  doxygen $(doxygen --version 2>&1)"
 
 # Delete old docs
 echo "  Deleting old docs..."
-rm -rf docs
+rm -rf example/docs
 
-# Check input source
-INPUT_SRC="/d/Repositories/o3de-extras/Gems/ROS2/Code/Include"
-if [ ! -d "$INPUT_SRC" ]; then
-  echo "ERROR: Source directory not found at $INPUT_SRC"
-  echo "  Please ensure the o3de-extras repository is cloned."
-  exit 1
-fi
-echo "  Source: $INPUT_SRC ($(find "$INPUT_SRC" -name '*.h' -o -name '*.hpp' 2>/dev/null | wc -l) header files)"
-
-# Generate docs
+# Generate docs from the self-contained example
 echo "  Generating Doxygen XML documentation..."
-doxygen Doxyfile 2>&1
-echo "  Generated $(ls docs/*.xml 2>/dev/null | wc -l) XML files"
+cd example && doxygen Doxyfile 2>&1 && cd ..
+echo "  Generated $(ls example/docs/*.xml 2>/dev/null | wc -l) XML files"
 
 echo "=== C++: build done ==="

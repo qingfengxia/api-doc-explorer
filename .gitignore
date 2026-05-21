@@ -8,3 +8,6 @@
 *.xml
 *.jar
 **/api-docs.json
+
+*.pyc
+*.pyd
