@@ -1,0 +1,10 @@
+
+**/docs/**
+**/dist/**
+**/target/**
+**/node_modules/**
+
+//*.json
+*.xml
+*.jar
+**/api-docs.json

@@ -1,0 +1,11 @@
+{
+  "name": "jsdoc-example",
+  "version": "1.0.0",
+  "description": "Example JavaScript project demonstrating JSDoc annotations",
+  "main": "src/index.js",
+  "scripts": {
+    "docs": "jsdoc -c jsdoc.json -d docs && jsdoc -X -c jsdoc.json > docs/api-docs.json",
+    "explore": "node ../javascript-api-explorer.js --doc-path ./docs/"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,18 @@
+# Doxyfile for ROS2 Gems API documentation
+# Generates XML output for use with cpp-api-explorer.py
+
+PROJECT_NAME           = "ROS2 Gems"
+PROJECT_BRIEF          = "ROS2 Gem for O3DE"
+OUTPUT_DIRECTORY       = ./docs
+INPUT                  = /d/Repositories/o3de-extras/Gems/ROS2/Code/Include
+FILE_PATTERNS          = *.h *.hpp
+RECURSIVE              = YES
+GENERATE_XML           = YES
+XML_OUTPUT             = .
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_NO_PARAMDOC       = NO
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = NO
+SORT_MEMBER_DOCS       = YES

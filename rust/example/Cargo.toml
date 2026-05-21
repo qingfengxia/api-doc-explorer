@@ -1,0 +1,12 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+description = "Rust API 示例项目 — 演示文档注释与 rustdoc JSON 输出"
+
+# 包含 JSON 文档文件到发布包中
+include = ["src/**/*", "Cargo.toml", "Cargo.lock", "docs/api-docs.json"]
+
+# docs 元数据 — 指向 api-explorer 使用的 JSON 文件路径
+[package.metadata.docs]
+json-path = "docs/api-docs.json"

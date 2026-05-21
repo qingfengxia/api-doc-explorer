@@ -1,0 +1,11 @@
+com/example/product/Product.class
+com/example/product/ProductService.class
+com/example/logger/LoggerService$LogEntry.class
+com/example/model/User.class
+com/example/doclet/ApiDoclet$2.class
+com/example/logger/LoggerService.class
+com/example/product/ProductCategory.class
+com/example/logger/LogLevel.class
+com/example/doclet/ApiDoclet$1.class
+com/example/service/UserService.class
+com/example/doclet/ApiDoclet.class
