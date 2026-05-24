@@ -152,15 +152,19 @@ def introspect_module(module_path: str) -> Dict:
         if hasattr(obj, '__module__') and obj.__module__ and not obj.__module__.startswith(module_name):
             continue
 
+        obj_module = getattr(obj, '__module__', module_name)
+        qualified_name = f"{obj_module}.{name}"
+
         item: Dict[str, Any] = {
             "name": name,
+            "qualifiedName": qualified_name,
             "kind": get_type_name(obj),
             "description": get_one_line_doc(inspect.getdoc(obj)),
             "full_doc": inspect.getdoc(obj),
         }
 
         if inspect.isclass(obj):
-            item["module"] = getattr(obj, '__module__', module_name)
+            item["module"] = obj_module
 
             if issubclass(obj, Enum):
                 item["members"] = extract_enum_members(obj)
@@ -175,6 +179,7 @@ def introspect_module(module_path: str) -> Dict:
                 if inspect.isfunction(m_obj) or inspect.ismethod(m_obj):
                     method_info: Dict[str, Any] = {
                         "name": m_name,
+                        "qualifiedName": f"{qualified_name}.{m_name}",
                         "kind": "method",
                         "signature": get_signature_str(m_obj),
                         "description": get_one_line_doc(inspect.getdoc(m_obj)),
@@ -194,7 +199,7 @@ def introspect_module(module_path: str) -> Dict:
             params = extract_params_from_sig(obj)
             if params:
                 item["parameters"] = params
-            item["module"] = getattr(obj, '__module__', module_name)
+            item["module"] = obj_module
 
         items.append(item)
 

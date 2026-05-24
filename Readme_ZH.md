@@ -52,6 +52,8 @@
 | **C/C++** | [Doxygen](https://www.doxygen.nl/)（XML 输出） | `docs/xml/` | `python3 cpp-api-explorer.py --doc-path ./docs/ namespace::Class::method` |
 | **Python** | 运行时反射（`inspect` 模块） | *（无需——实时反射）* | `python3 python_api_explorer.py module_path.ClassName.method` |
 
+更多的语言可以通过agentic coding拓展, 见后续章节(直接给出prompt模板)
+
 ### 核心特性
 
 - **零第三方运行时依赖** — Node.js Explorer 仅使用内置运行时；Python Explorer 仅需 Python 3.6+。
@@ -85,7 +87,7 @@ node javascript-api-explorer.js --doc-path ./docs/ UserService.findUser
 
 ```bash
 cd your-maven-project
-mvn package                       # 运行 ApiDoclet，生成 api-doc.json
+mvn package                       # 运行 ApiDoclet，生成 docs/api-doc.json
 java -cp target/classes com.example.JavaApiExplorer com.example.UserService.createUser
 ```
 
@@ -153,11 +155,11 @@ api-explorer-skill/
 
 ---
 
-## 添加新语言
+## 添加新语言api-explorer的指南(prompt模板)
 
-1. 参照现有语言文件夹的模式。
+1. 参照现有语言文件夹(比如typescript)的模式。
 2. 创建：`xxx-api-explorer` CLI、`build.sh`、`test.sh`、`Readme.md` 及 `example/` 项目。
-3. 在 `build_and_test_all.sh` 中为新语言添加一行。
+3. 在 `build_and_test_all.sh` 中为新语言添加对应语言的CLI构建和example的文档生成脚本, 和单元测试脚本。
 4. 更新本 Readme 的支持语言表格。
 
 整个项目均通过 vibe-coding 构建——添加新语言非常简单。
@@ -169,9 +171,11 @@ api-explorer-skill/
 - [ ] 统一的 `api-explorer` CLI 包装器，覆盖所有语言
 - [ ] GitHub CI 流水线，按语言构建和测试
 - [ ] 所有语言示例代码统一为英文
+- [ ] 更多测试, 提升CLI软件质量
+- [ ] 大型项目的文档多文件拆分
 
 ---
 
 ## 许可证
 
-MIT
+MIT license

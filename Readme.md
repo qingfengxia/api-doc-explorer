@@ -6,6 +6,8 @@ When an LLM-based agent works with a private SDK or large-scale codebase it was 
 
 > Successfully used in production on a **1.5 M-line** private project.
 
+Instead of tens of skills to describe a private sdk, an Arch.md (with module and code structure) assisted by this api-explorer skill will let LLM understand how to the API,
+
 ---
 
 ## Install This Skill
@@ -47,6 +49,10 @@ Source Code + Doc Comments
 3. **Runtime** — the agent invokes the language-specific explorer CLI to query exactly the API it needs.
 
 ---
+
+## Unified CLI Output and json output
+
+
 
 ## Supported Languages
 
@@ -137,9 +143,9 @@ api-explorer-skill/
 other language has a similar subfolder structure as `typescript`
 ---
 
-## Adding a New Language
+## Adding a New Language (prompt template)
 
-1. Follow the pattern of an existing language folder.
+1. Follow the pattern of an existing language folder such as `typescript`.
 2. Create: `xxx-api-explorer` CLI, `build.sh`, `test.sh`, `Readme.md`, and an `example/` project.
 3. Add a line in `build_and_test_all.sh` for the new language.
 4. Update this Readme's supported-languages table.
