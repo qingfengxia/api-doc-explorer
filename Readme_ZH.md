@@ -17,7 +17,7 @@
 | 检索缓慢 | 全文搜索整个代码库 | 亚秒级结构化查询 |
 | 编写 N 个 Skill | 每个 SDK/API 需要一个 Skill | 一个通用 Skill 覆盖所有语言 |
 
-与其为每个私有 SDK 编写数十个教学 Skill，只需提供 `ModuleArch.md` + `CodeStructure.md`，让 Agent 按需探索 API。
+与其为每个私有 SDK 编写数十个API教程Skill/和documentation到skill的转化，只需提供 `ModuleArch.md` + `CodeStructure.md`，让 Agent 按需探索 API doc。
 
 ---
 
@@ -166,9 +166,18 @@ api-explorer-skill/
 
 ---
 
+## 标准化倡议
+
+见: 知乎文章:  [Agentic Coding 时代的软件工程文档: HTML 给人类，JSON 给 Agents - 知乎](https://zhuanlan.zhihu.com/p/2041867755104752257)
+
+1. 各种文档的代码中API Doc都有标准, 生成的json的文档schema, 理想中应该是语言中性(多语言共用).
+2. 单文件文档数据库api-docs.json , 在发布二进制包中的位置, 方便运行时CLI自动查询
+3. api-explorer CLI的arguments和输出格式:
+4. 大型软件工程的文档拆分为多个json和模块结构index.json (TODO: 未设计)
+
 ## 路线图
 
-- [ ] 统一的 `api-explorer` CLI 包装器，覆盖所有语言
+- [x] 统一的 `api-explorer` CLI 包装器，覆盖所有语言
 - [ ] GitHub CI 流水线，按语言构建和测试
 - [ ] 所有语言示例代码统一为英文
 - [ ] 更多测试, 提升CLI软件质量
