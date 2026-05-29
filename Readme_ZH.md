@@ -55,7 +55,7 @@ git clone https://github.com/qingfengxia/api-doc-explorer.git
 |---|---|---|---|
 | **TypeScript** | [TypeDoc](https://typedoc.org/) | `docs/api-docs.json` | `node typescript-api-explorer.js --doc-path ./docs/ ModuleName.method` |
 | **JavaScript** | [JSDoc](https://jsdoc.app/)（`-X` 参数） | `docs/api-docs.json` | `node javascript-api-explorer.js --doc-path ./docs/ ClassName.method` |
-| **Java** | 自定义 [Doclet](Java/ApiDoclet.java) + `javadoc` | `target/classes/api-doc.json` | `java JavaApiExplorer com.example.ClassName.method` |
+| **Java** | 自定义 [Doclet](java-api-doc-cli/ApiDoclet.java) + `javadoc` | `target/classes/api-doc.json` | `java JavaApiExplorer com.example.ClassName.method` |
 | **Rust** | `rustdoc --output-format json`（nightly）或 `gen_docs.py`（stable） | `docs/api-docs.json` | `python3 rust-api-explorer.py --doc-path ./docs/ StructName.method` |
 | **C/C++** | [Doxygen](https://www.doxygen.nl/)（XML 输出） | `docs/xml/` | `python3 cpp-api-explorer.py --doc-path ./docs/ namespace::Class::method` |
 | **Python** | 运行时反射（`inspect` 模块） | *（无需——实时反射）* | `python3 python_api_explorer.py module_path.ClassName.method` |
@@ -130,32 +130,39 @@ python3 python_api_explorer.py collections.abc.Iterable
 ```
 api-explorer-skill/
 ├── SKILL.md                       # Agent Skill 定义
+├── README.md                      # 设计原理
 ├── build_and_test_all.sh          # CI 编排器
-├── typescript/
+├── typescript-api-doc-cli/
+│   ├── SKILL.md                   # TypeScript CLI skill
 │   ├── typescript-api-explorer.js
 │   ├── build.sh / test.sh
 │   ├── Readme.md
-│   └── example/                   # 含 typedoc.json 的完整 TS 项目
-├── javascript/
+│   └── example/
+├── javascript-api-doc-cli/
+│   ├── SKILL.md                   # JavaScript CLI skill
 │   ├── javascript-api-explorer.js
 │   ├── build.sh / test.sh
 │   ├── Readme.md
-│   └── example/                   # 含 jsdoc.json 的完整 JS 项目
-├── Java/
+│   └── example/
+├── java-api-doc-cli/
+│   ├── SKILL.md                   # Java CLI skill
 │   ├── ApiDoclet.java / JavaApiExplorer.java
 │   ├── build.sh / test.sh
 │   ├── Readme.md
-│   └── example/                   # 含 exec-maven-plugin 的 Maven 项目
-├── rust/
+│   └── example/
+├── rust-api-doc-cli/
+│   ├── SKILL.md                   # Rust CLI skill
 │   ├── rust-api-explorer.py / gen_docs.py
 │   ├── build.sh / test.sh
 │   ├── Readme.md
-│   └── example/                   # 含 api-docs.json 的 Cargo 项目
-├── cpp/
+│   └── example/
+├── cpp-api-doc-cli/
+│   ├── SKILL.md                   # C++ CLI skill
 │   ├── cpp-api-explorer.py / Doxyfile
 │   ├── build.sh / test.sh
 │   └── Readme.md
-└── python/
+└── python-api-doc-cli/
+    ├── SKILL.md                   # Python CLI skill
     ├── python_api_explorer.py
     ├── build.sh / test.sh
     └── Readme.md

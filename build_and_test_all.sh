@@ -64,12 +64,12 @@ run_lang() {
 }
 
 # Run each language
-run_lang "TypeScript" "typescript" "build.sh" "test.sh"
-run_lang "JavaScript" "javascript" "build.sh" "test.sh"
-run_lang "Rust"       "rust"       "build.sh" "test.sh"
-run_lang "C++"        "cpp"        "build.sh" "test.sh"
-run_lang "Java"       "Java"       "build.sh" "test.sh"
-run_lang "Python"     "python"     "build.sh" "test.sh"
+run_lang "TypeScript" "typescript-api-doc-cli" "build.sh" "test.sh"
+run_lang "JavaScript" "javascript-api-doc-cli" "build.sh" "test.sh"
+run_lang "Rust"       "rust-api-doc-cli"       "build.sh" "test.sh"
+run_lang "C++"        "cpp-api-doc-cli"        "build.sh" "test.sh"
+run_lang "Java"       "java-api-doc-cli"       "build.sh" "test.sh"
+run_lang "Python"     "python-api-doc-cli"     "build.sh" "test.sh"
 
 echo ""
 echo "=============================================="
