@@ -1,10 +1,18 @@
-# API文档探索器 Skill
+# 面向Agent coding的运行时API文档检索Skill和CLI
 
 **面向 AI Agent 的运行时 API 文档检索——无需扫描源代码。**
 
 当基于大语言模型的 Agent 面对一个从未训练过的私有 SDK 或大规模代码库时，它面临一个根本性问题：不了解 API。搜索源文件速度慢、上下文窗口爆炸，且经常返回过时或模糊的结果。**API Doc Explorer** 通过将预构建的 JSON 文档随包发布，并在运行时即时查询，彻底解决了这一问题。
 
 > 已在一个 **150 万行**的私有项目中成功投入生产使用。
+
+---
+
+## 安装Skill(内含api-explorer CLI)
+```bash
+# cd to your  agent's skills folder
+git clone https://github.com/qingfengxia/api-doc-explorer.git
+```
 
 ---
 
@@ -174,6 +182,9 @@ api-explorer-skill/
 2. 单文件文档数据库api-docs.json , 在发布二进制包中的位置, 方便运行时CLI自动查询
 3. api-explorer CLI的arguments和输出格式:
 4. 大型软件工程的文档拆分为多个json和模块结构index.json (TODO: 未设计)
+
+### 各种编程语言文档差异
+
 
 ## 路线图
 

@@ -1,6 +1,7 @@
 ```yaml
 - name: API Documentation Explorer
 - description: A code-agent skill for instant, structured API documentation retrieval across 6 languages. Agents query pre-built JSON docs instead of scanning source code.
+- version: "0.2.0"
 ```
 
 ## When to Use
@@ -48,10 +49,21 @@ node javascript-api-explorer.js --doc-path ./docs/ UserService.findUser
 
 ### Java
 
+if apidocs.json provided by javadoc + doclet, three levels of API is suported `package/module->class->method`
 ```bash
+# if GlassGraph is available, children class/subpackage/module can be explored
 java -cp target/classes JavaApiExplorer com.example.service
+# via java reflection mechanism, class API can be explored, without api-docs
 java -cp target/classes JavaApiExplorer com.example.service.UserService.createUser
+# if apidocs.json provided, details
+java -cp target/classes JavaApiExplorer com.example.service.UserService.createUser
+
 ```
+
+### OpenAPI
+
+For Java OpenAPI, swagger cli can be used to explore API documentation
+
 
 ### Rust
 

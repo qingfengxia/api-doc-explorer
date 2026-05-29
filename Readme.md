@@ -1,4 +1,4 @@
-# API Doc Explorer Skill
+# API Doc Explorer Skill and CLI for AI Code Agent
 
 **Runtime API documentation retrieval for AI agents — no source code scanning required.**
 
@@ -10,7 +10,7 @@ Instead of tens of skills to describe a private sdk, an Arch.md (with module and
 
 ---
 
-## Install This Skill
+## Install This Skill (All language CLI include)
 
 ```bash
 # cd to your  agent's skills folder
@@ -76,6 +76,8 @@ Source Code + Doc Comments
 
 ## Quick Start
 
+We support 3 level of queries:  package/namesapce/module -> class/type/struct -> method/enum
+
 ### TypeScript
 
 ```bash
@@ -126,6 +128,18 @@ python3 python_api_explorer.py json.dumps
 python3 python_api_explorer.py collections.abc.Iterable
 ```
 
+### go-lang
+
+go-lang has builtin doc query CLI.
+go 
+```bash
+go doc className
+```
+
+## Standardization of api-docs.json and CLI
+
+more details in <Readme_ZH.md>
+
 ---
 
 ## Project Structure
@@ -156,7 +170,7 @@ The entire project was built by vibe-coding — adding another language is strai
 
 ## Roadmap
 
-- [ ] Unified `api-explorer` CLI wrapper for all languages
+- [X] Unified `api-explorer` CLI wrapper for all languages
 - [ ] GitHub CI pipeline for per-language build & test
 - [ ] English-first example code across all languages
 - [ ] performance:  split api-docs.json into multiple files (partially supported)
