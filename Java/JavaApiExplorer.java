@@ -1,4 +1,4 @@
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.*;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -7,54 +7,77 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.*;
+import java.util.stream.*;
 
 /**
- * JavaApiExplorer（支持 JSON 文档模式 + 反射模式）
+ * JavaApiExplorer（支持 JSON 文档模式 + 反射模式 + JAR 探索）
  *
  * 模式1 — JSON 文档模式（默认）：
  *   java -cp ".:example/target/classes" JavaApiExplorer com.example.service.UserService
  *   当 classpath 中包含 api-doc.json 时自动使用。
+ *   若未找到 api-doc.json，自动回退到反射模式。
  *
  * 模式2 — 反射模式（无需 JSON 文档）：
  *   java -cp ".:example/target/classes" JavaApiExplorer --reflect com.example.service.UserService
  *   java -cp ".:example/target/classes" JavaApiExplorer --reflect com.example.service.UserService.findUser
  *   直接通过 Java 反射获取类/方法信息。
  *
- * 模式3 — ClassGraph 包扫描模式（需要 ClassGraph 在 classpath 上）：
- *   java -cp ".:example/target/classes:lib/classgraph.jar" JavaApiExplorer --reflect com.example.service
- *   当 ClassGraph 可用时，支持包级别的类扫描。
+ * 模式3 — JAR 探索模式（解析 jar tf 输出）：
+ *   java -cp "." JavaApiExplorer --jar lib/classgraph-4.8.184.jar
+ *   java -cp "." JavaApiExplorer --jar lib/classgraph-4.8.184.jar io.github.classgraph
+ *   java -cp ".:lib/classgraph-4.8.184.jar" JavaApiExplorer --reflect io.github.classgraph
+ *   通过解析 jar tf 输出获取包/类信息，无需 ClassGraph。
+ *
+ * 模式4 — ClassGraph 包扫描模式（需要 ClassGraph 在 classpath 上）：
+ *   java -cp ".:lib/classgraph-4.8.184.jar" JavaApiExplorer --reflect com.example.service
+ *   当 ClassGraph 可用时，支持更精确的包级别类扫描。
  *
  * 通用用法：
- *   JavaApiExplorer [--reflect] <query>
+ *   JavaApiExplorer [--reflect] [--jar <path>] [query]
  *   <query> 格式:
- *     package                  → 包级查询（列出包下所有类，需 JSON 文档或 ClassGraph）
+ *     package                  → 包级查询（列出包下所有类）
  *     package.ClassName        → 类级查询
  *     package.ClassName.method → 方法级查询
  */
 public class JavaApiExplorer {
 
     private static boolean reflectMode = false;
+    private static String jarPath = null;
 
     public static void main(String[] args) {
         // Parse flags
         List<String> positional = new ArrayList<>();
-        for (String arg : args) {
-            if (arg.equals("--reflect") || arg.equals("-r")) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--reflect") || args[i].equals("-r")) {
                 reflectMode = true;
-            } else if (arg.equals("--help") || arg.equals("-h")) {
+            } else if (args[i].equals("--jar") || args[i].equals("-j")) {
+                if (i + 1 < args.length) {
+                    jarPath = args[++i];
+                } else {
+                    System.out.println("❌ --jar requires a path argument");
+                    return;
+                }
+            } else if (args[i].equals("--help") || args[i].equals("-h")) {
                 printUsage();
                 return;
             } else {
-                positional.add(arg);
+                positional.add(args[i]);
             }
         }
 
-        if (positional.isEmpty()) {
+        if (positional.isEmpty() && jarPath == null) {
             printUsage();
             return;
         }
 
-        String input = positional.get(0);
+        String input = positional.isEmpty() ? "" : positional.get(0);
+
+        // --jar mode: explore JAR contents
+        if (jarPath != null) {
+            exploreJar(jarPath, input);
+            return;
+        }
 
         // Try JSON doc mode first (unless --reflect is forced)
         if (!reflectMode) {
@@ -63,6 +86,9 @@ public class JavaApiExplorer {
                 exploreFromJson(root, input);
                 return;
             }
+            // No api-doc.json found, auto-fallback to reflection
+            System.out.println("ℹ️  No api-doc.json found, auto-fallback to reflection mode.");
+            System.out.println();
         }
 
         // Reflection mode
@@ -71,21 +97,32 @@ public class JavaApiExplorer {
 
     private static void printUsage() {
         System.out.println("Usage:");
-        System.out.println("  JavaApiExplorer [--reflect] <query>");
+        System.out.println("  JavaApiExplorer [--reflect] [--jar <path>] [query]");
         System.out.println();
         System.out.println("Query formats:");
-        System.out.println("  package                       List classes in package (JSON doc or ClassGraph)");
+        System.out.println("  package                       List classes in package");
         System.out.println("  package.ClassName             Show class info");
         System.out.println("  package.ClassName.method      Show method details");
         System.out.println();
         System.out.println("Options:");
-        System.out.println("  --reflect, -r    Force reflection mode (skip JSON doc lookup)");
-        System.out.println("  --help, -h       Show this help message");
+        System.out.println("  --reflect, -r     Force reflection mode (skip JSON doc lookup)");
+        System.out.println("  --jar, -j <path>  Explore a JAR file (list packages/classes)");
+        System.out.println("  --help, -h        Show this help message");
         System.out.println();
         System.out.println("Modes:");
         System.out.println("  1. JSON doc mode (default): uses api-doc.json from classpath");
-        System.out.println("  2. Reflection mode: uses Java reflection to inspect classes");
-        System.out.println("  3. ClassGraph mode: if ClassGraph is on classpath, supports package scanning");
+        System.out.println("     Auto-falls back to reflection if api-doc.json not found");
+        System.out.println("  2. Reflection mode (--reflect): uses Java reflection to inspect classes");
+        System.out.println("  3. JAR explore mode (--jar): parses jar tf output for package/class listing");
+        System.out.println("  4. ClassGraph mode: if ClassGraph is on classpath, enhances package scanning");
+        System.out.println();
+        System.out.println("Examples:");
+        System.out.println("  # Explore a JAR's packages");
+        System.out.println("  java -cp . JavaApiExplorer --jar lib/xxx.jar");
+        System.out.println("  # Explore a specific package in a JAR");
+        System.out.println("  java -cp . JavaApiExplorer --jar lib/xxx.jar com.example.service");
+        System.out.println("  # Explore a specific class (JAR on classpath)");
+        System.out.println("  java -cp .:lib/xxx.jar JavaApiExplorer --reflect com.example.Service");
     }
 
     // ==================== JSON 文档模式 ====================
@@ -380,29 +417,233 @@ public class JavaApiExplorer {
     }
 
     /**
-     * Explore a package using ClassGraph (if available) or list from classpath.
+     * Explore a package using ClassGraph (if available) or jar tf fallback.
      */
     private static void explorePackageFromReflection(String packageName) {
-        // Try ClassGraph first
+        // Strategy 1: Try ClassGraph first (most accurate)
         try {
             Class<?> classGraphClass = Class.forName("io.github.classgraph.ClassGraph");
             explorePackageWithClassGraph(packageName);
             return;
         } catch (ClassNotFoundException ignored) {
-            // ClassGraph not available
+            // ClassGraph not available, try fallback
         } catch (Exception e) {
             System.out.println("⚠️  ClassGraph scan failed: " + e.getMessage());
         }
 
-        // Fallback: try to find classes from classpath using simple heuristics
-        System.out.println("\n⚠️  Package exploration requires ClassGraph on the classpath.");
-        System.out.println("   Current mode: class-level and method-level reflection only.");
+        // Strategy 2: Use jar tf to scan JARs on classpath
+        List<String> classNames = scanPackageFromJarTf(packageName);
+        if (!classNames.isEmpty()) {
+            printPackageInfo(packageName, classNames);
+            return;
+        }
+
+        // Strategy 3: No results found
+        System.out.println("\n❌ No classes found for package: " + packageName);
         System.out.println();
-        System.out.println("   To enable package scanning, add ClassGraph:");
-        System.out.println("   java -cp \".:<your-jar>:lib/classgraph-4.8.jar\" JavaApiExplorer --reflect " + packageName);
-        System.out.println();
-        System.out.println("   Alternatively, query a specific class:");
-        System.out.println("   JavaApiExplorer --reflect " + packageName + ".<ClassName>");
+        System.out.println("   Hints:");
+        System.out.println("   - Ensure the JAR containing this package is on the classpath (-cp)");
+        System.out.println("   - Or use --jar to explore a specific JAR:");
+        System.out.println("     JavaApiExplorer --jar path/to/lib.jar " + packageName);
+        System.out.println("   - Or query a specific class directly:");
+        System.out.println("     JavaApiExplorer --reflect " + packageName + ".<ClassName>");
+    }
+
+    /**
+     * Scan package classes from JARs on classpath using `jar tf`.
+     */
+    private static List<String> scanPackageFromJarTf(String packageName) {
+        String packagePath = packageName.replace('.', '/');
+        List<String> classNames = new ArrayList<>();
+
+        // Collect JARs and directories from classpath
+        String classPath = System.getProperty("java.class.path");
+        String[] pathElements = classPath.split(File.pathSeparator);
+
+        for (String pathElement : pathElements) {
+            File f = new File(pathElement);
+            if (!f.exists()) continue;
+
+            if (pathElement.endsWith(".jar")) {
+                classNames.addAll(listClassesInJarPackage(f, packagePath));
+            } else if (f.isDirectory()) {
+                classNames.addAll(listClassesInDirPackage(f, packagePath));
+            }
+        }
+
+        return classNames;
+    }
+
+    /**
+     * List classes in a specific package within a directory (class file root).
+     */
+    private static List<String> listClassesInDirPackage(File dir, String packagePath) {
+        List<String> classNames = new ArrayList<>();
+        File pkgDir = new File(dir, packagePath);
+        if (!pkgDir.isDirectory()) return classNames;
+
+        File[] classFiles = pkgDir.listFiles((d, name) ->
+                name.endsWith(".class") && !name.contains("$"));
+        if (classFiles == null) return classNames;
+
+        for (File cf : classFiles) {
+            String name = cf.getName();
+            String className = packagePath + "/" + name.substring(0, name.length() - 6);
+            classNames.add(className.replace('/', '.'));
+        }
+        return classNames;
+    }
+
+    /**
+     * List classes in a specific package within a JAR using JarFile API.
+     */
+    private static List<String> listClassesInJarPackage(File jar, String packagePath) {
+        List<String> classNames = new ArrayList<>();
+        try (JarFile jf = new JarFile(jar)) {
+            Enumeration<JarEntry> entries = jf.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String name = entry.getName();
+                // Match: packagePath/ClassName.class (not inner classes by default)
+                if (name.startsWith(packagePath + "/") && name.endsWith(".class")
+                        && !name.contains("$")) {
+                    // Convert path to class name: com/example/Foo.class → com.example.Foo
+                    String className = name.substring(0, name.length() - 6).replace('/', '.');
+                    classNames.add(className);
+                }
+            }
+        } catch (IOException ignored) {}
+        return classNames;
+    }
+
+    /**
+     * Print package info with class list.
+     */
+    private static void printPackageInfo(String packageName, List<String> classNames) {
+        System.out.println("\n✅ Found: " + packageName);
+        System.out.println("=".repeat(60));
+        System.out.println("🏷️  Kind:       package");
+        System.out.println("📊 Class Count: " + classNames.size());
+        System.out.println("\n📦 Children (" + classNames.size() + "):");
+        for (String cn : classNames) {
+            String simpleName = cn.substring(cn.lastIndexOf('.') + 1);
+            System.out.println("   ▸ " + simpleName + " — " + cn);
+        }
+        System.out.println("=".repeat(60));
+    }
+
+    // ==================== JAR 探索模式 ====================
+
+    /**
+     * Explore a JAR file: list top-level packages or classes in a specific package.
+     */
+    private static void exploreJar(String jarPath, String query) {
+        File jarFile = new File(jarPath);
+        if (!jarFile.exists()) {
+            System.out.println("❌ JAR file not found: " + jarPath);
+            return;
+        }
+
+        // Build package → class mapping from JAR
+        Map<String, List<String>> packageClasses = new TreeMap<>();
+        Set<String> allPackages = new TreeSet<>();
+        Set<String> topLevelPackages = new TreeSet<>();
+
+        try (JarFile jf = new JarFile(jarFile)) {
+            Enumeration<JarEntry> entries = jf.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String name = entry.getName();
+                if (!name.endsWith(".class") || name.contains("$")) continue;
+
+                // com/example/Foo.class → com.example.Foo
+                String className = name.substring(0, name.length() - 6).replace('/', '.');
+                int lastDot = className.lastIndexOf('.');
+                if (lastDot < 0) continue; // default package
+
+                String pkg = className.substring(0, lastDot);
+                packageClasses.computeIfAbsent(pkg, k -> new ArrayList<>()).add(className);
+                allPackages.add(pkg);
+
+                // Extract top-level package (e.g., "io" from "io.github.classgraph")
+                String topPkg = className.substring(0, className.indexOf('.'));
+                topLevelPackages.add(topPkg);
+            }
+        } catch (IOException e) {
+            System.out.println("❌ Failed to read JAR: " + e.getMessage());
+            return;
+        }
+
+        if (query.isEmpty()) {
+            // No query: show top-level package summary
+            printJarOverview(jarFile, topLevelPackages, allPackages, packageClasses);
+        } else {
+            // Query: show classes in the matching package
+            String queryPath = query.replace('/', '.');
+            List<String> classes = packageClasses.get(queryPath);
+            if (classes != null) {
+                printPackageInfo(queryPath, classes);
+            } else {
+                // Try sub-packages
+                String queryPathSlash = queryPath + ".";
+                List<String> subPackages = allPackages.stream()
+                        .filter(p -> p.startsWith(queryPathSlash))
+                        .map(p -> {
+                            String rest = p.substring(queryPathSlash.length());
+                            int dotIdx = rest.indexOf('.');
+                            return dotIdx >= 0 ? queryPath + "." + rest.substring(0, dotIdx) : p;
+                        })
+                        .collect(Collectors.toSet())
+                        .stream().sorted().collect(Collectors.toList());
+
+                if (!subPackages.isEmpty()) {
+                    System.out.println("\n✅ Package: " + queryPath);
+                    System.out.println("=".repeat(60));
+                    System.out.println("🏷️  Kind:       package (partial match)");
+                    System.out.println("\n📦 Sub-packages (" + subPackages.size() + "):");
+                    for (String sp : subPackages) {
+                        int count = packageClasses.getOrDefault(sp, Collections.emptyList()).size();
+                        System.out.println("   ▸ " + sp + " (" + count + " classes)");
+                    }
+                    System.out.println("=".repeat(60));
+                } else {
+                    System.out.println("\n❌ Package not found in JAR: " + queryPath);
+                    System.out.println("   Available top-level packages: " + topLevelPackages);
+                }
+            }
+        }
+    }
+
+    /**
+     * Print JAR overview: top-level packages and class counts.
+     */
+    private static void printJarOverview(File jarFile, Set<String> topLevelPackages,
+                                          Set<String> allPackages,
+                                          Map<String, List<String>> packageClasses) {
+        long totalClasses = packageClasses.values().stream().mapToLong(List::size).sum();
+
+        System.out.println("\n✅ JAR: " + jarFile.getName());
+        System.out.println("=".repeat(60));
+        System.out.println("📊 Total Classes: " + totalClasses);
+        System.out.println("📊 Total Packages: " + allPackages.size());
+        System.out.println("\n📦 Top-level packages (" + topLevelPackages.size() + "):");
+
+        for (String topPkg : topLevelPackages) {
+            // Count all classes under this top-level package
+            long classCount = packageClasses.entrySet().stream()
+                    .filter(e -> e.getKey().startsWith(topPkg + ".") || e.getKey().equals(topPkg))
+                    .mapToLong(e -> e.getValue().size())
+                    .sum();
+            long subPkgCount = allPackages.stream()
+                    .filter(p -> p.startsWith(topPkg + ".") || p.equals(topPkg))
+                    .count();
+            System.out.println("   ▸ " + topPkg + " (" + classCount + " classes, " + subPkgCount + " packages)");
+        }
+
+        System.out.println("\n💡 Use --jar " + jarFile.getPath() + " <package> to explore deeper");
+        System.out.println("   e.g., JavaApiExplorer --jar " + jarFile.getPath() + " " +
+                (topLevelPackages.isEmpty() ? "<package>" : topLevelPackages.iterator().next()));
+        System.out.println("=".repeat(60));
     }
 
     /**
@@ -418,7 +659,7 @@ public class JavaApiExplorer {
             // new ClassGraph().enableClassInfo().acceptPackages(pkg).scan()
             Object classGraph = classGraphClass.getDeclaredConstructor().newInstance();
             classGraphClass.getMethod("enableClassInfo").invoke(classGraph);
-            classGraphClass.getMethod("acceptPackages", String.class).invoke(classGraph, packageName);
+            classGraphClass.getMethod("acceptPackages", String[].class).invoke(classGraph, (Object) new String[]{packageName});
             Object scanResult = classGraphClass.getMethod("scan").invoke(classGraph);
 
             // scanResult.getAllClasses()
